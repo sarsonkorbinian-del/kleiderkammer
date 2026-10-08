@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kleiderkammer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kleiderkammer">
+<meta name="theme-color" content="#1B1F23">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAADrUlEQVR4nO3cTW7TQACGYRdxCxAsEAtuxg04AzfgZl2wQxyERaSoovkgP874G+d5lmkVezyvx67b9Ondx08LnPJm6x2glziIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxEDxHH849fU7xnm6d9//OWl1P45euH8rdts9s4Tp7Zq0zk/d65zdutd2B9myz4h43uLJFdrRznZHHj/A3YRI+dxHHRanH15I3ZSo/p47juInLFzA3bUI+J7zmm+GFy6nuRKVeOVbK4aMLGb7HBZHGsu1qcOVubbLTBNHHc6SLy36naarsNJojj3vcW/5inDTfdoPqGdIpbzluU365W/+JtzFFLCY5Js7aMpTyOYV53sPtF6xztcQw7sV7WMKyM5mVj6Y+DDU0Qx+DFw7JxNEEcI7nVeGmC5xwHgx85PPgTjoPq5xwDpEk6vv7Ia8k0K8ey6jwN+5X9WlvfxGOtHLfMygOuJTOtHEvZX9xU7cw97HnluPc07H4tmWzlWM6YiQ1PzeZ9u8IOV469nsfjTfYQbPaJn2v/Z7qs3O/InlztB2+u0ByXlblOuP8q/xufowkuKzsr46h/XO1x9B/BW5SPrj0ONlQdR/mJtYrmMfbG0XzU1lU70t442Jw4iErjqF1p76RzvKVx0EAcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQdT+ryZ/f//8+sX3336O35PbTTeW3jhOHsqXX2o+rH+ZdCwuK0SlcfzjVLvoexrMO5bSOGggDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiISuM45+OBnR8hfG3esZTGQYPeD1IfTqbpPpl+0qRj6Y3joPnYXWq6sZReVr58/bD1LgzVOd7SOGggDqLeODpX2nuoHWlvHEvxUVtR8xir42Bb7XE0n1i3Kx9dexxL/RG8Wv+42h+CHRyO4/OPX1vvyDr6szh4evfx09b7cIEd9DFLGct0cRxNV8lETRzNGgcDTHBDylbEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEP0BD87vX4fyaaoAAAAASUVORK5CYII=">
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAADrUlEQVR4nO3cTW7TQACGYRdxCxAsEAtuxg04AzfgZl2wQxyERaSoovkgP874G+d5lmkVezyvx67b9Ondx08LnPJm6x2glziIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxEDxHH849fU7xnm6d9//OWl1P45euH8rdts9s4Tp7Zq0zk/d65zdutd2B9myz4h43uLJFdrRznZHHj/A3YRI+dxHHRanH15I3ZSo/p47juInLFzA3bUI+J7zmm+GFy6nuRKVeOVbK4aMLGb7HBZHGsu1qcOVubbLTBNHHc6SLy36naarsNJojj3vcW/5inDTfdoPqGdIpbzluU365W/+JtzFFLCY5Js7aMpTyOYV53sPtF6xztcQw7sV7WMKyM5mVj6Y+DDU0Qx+DFw7JxNEEcI7nVeGmC5xwHgx85PPgTjoPq5xwDpEk6vv7Ia8k0K8ey6jwN+5X9WlvfxGOtHLfMygOuJTOtHEvZX9xU7cw97HnluPc07H4tmWzlWM6YiQ1PzeZ9u8IOV469nsfjTfYQbPaJn2v/Z7qs3O/InlztB2+u0ByXlblOuP8q/xufowkuKzsr46h/XO1x9B/BW5SPrj0ONlQdR/mJtYrmMfbG0XzU1lU70t442Jw4iErjqF1p76RzvKVx0EAcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQdT+ryZ/f//8+sX3336O35PbTTeW3jhOHsqXX2o+rH+ZdCwuK0SlcfzjVLvoexrMO5bSOGggDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiISuM45+OBnR8hfG3esZTGQYPeD1IfTqbpPpl+0qRj6Y3joPnYXWq6sZReVr58/bD1LgzVOd7SOGggDqLeODpX2nuoHWlvHEvxUVtR8xir42Bb7XE0n1i3Kx9dexxL/RG8Wv+42h+CHRyO4/OPX1vvyDr6szh4evfx09b7cIEd9DFLGct0cRxNV8lETRzNGgcDTHBDylbEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEP0BD87vX4fyaaoAAAAASUVORK5CYII=">
+<style>
+  :root{
+    --bg:#1B1F23;
+    --surface:#242A30;
+    --surface-2:#2D343B;
+    --border:#3A424A;
+    --text:#F2F1EC;
+    --text-muted:#98A1A8;
+    --accent:#D6402A;
+    --accent-dark:#B7331F;
+    --accent-2:#F2B705;
+    --danger:#D6402A;
+    --radius:12px;
+    --font-ui:'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, monospace;
+  }
+  *,*::before,*::after{box-sizing:border-box;}
+  html,body{height:100%;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-ui);
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{
+    max-width:560px;
+    margin:0 auto;
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+  .app-header{
+    position:sticky;
+    top:0;
+    z-index:5;
+    background:var(--bg);
+    border-bottom:1px solid var(--border);
+    padding:calc(18px + env(safe-area-inset-top,0px)) 20px 14px;
+  }
+  .header-row{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .app-title{
+    margin:0;
+    font-size:21px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  .app-sub{
+    margin:2px 0 0;
+    font-size:13px;
+    color:var(--text-muted);
+  }
+  .stat-block{text-align:right;}
+  .stat{
+    font-family:var(--font-mono);
+    font-size:26px;
+    font-weight:600;
+    color:var(--accent-2);
+    line-height:1;
+  }
+  .stat-label{font-size:11.5px;color:var(--text-muted);margin-top:2px;}
+  .db-banner{
+    margin-top:12px;
+    padding:9px 12px;
+    background:rgba(214,64,42,0.12);
+    border:1px solid rgba(214,64,42,0.35);
+    color:#F1A79A;
+    border-radius:8px;
+    font-size:12.5px;
+    line-height:1.4;
+  }
+  .app-main{
+    flex:1;
+    padding:18px 18px calc(104px + env(safe-area-inset-bottom,0px));
+  }
+  .view{animation:fade .15s ease;}
+  @keyframes fade{from{opacity:0;}to{opacity:1;}}
+
+  .scanner-wrap{
+    position:relative;
+    border-radius:var(--radius);
+    overflow:hidden;
+    background:#000;
+    aspect-ratio:4/3;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:16px;
+  }
+  #reader{width:100%;height:100%;}
+  #reader video, #reader canvas{width:100% !important;height:100% !important;object-fit:cover;}
+  .scan-placeholder{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:10px;color:var(--text-muted);padding:24px;text-align:center;font-size:13.5px;
+  }
+  .corner{position:absolute;width:26px;height:26px;border:3px solid var(--accent-2);opacity:0;transition:opacity .2s;}
+  .scanner-wrap.scanning .corner{opacity:1;}
+  .scanner-wrap.scanning .scan-placeholder{display:none;}
+  .corner.tl{top:10px;left:10px;border-right:none;border-bottom:none;border-radius:4px 0 0 0;}
+  .corner.tr{top:10px;right:10px;border-left:none;border-bottom:none;border-radius:0 4px 0 0;}
+  .corner.bl{bottom:10px;left:10px;border-right:none;border-top:none;border-radius:0 0 0 4px;}
+  .corner.br{bottom:10px;right:10px;border-left:none;border-top:none;border-radius:0 0 4px 0;}
+
+  .btn{
+    display:block;width:100%;
+    padding:14px 18px;
+    border-radius:9px;
+    border:none;
+    font-family:var(--font-ui);
+    font-weight:600;
+    font-size:15.5px;
+    cursor:pointer;
+    margin-bottom:10px;
+    text-align:center;
+  }
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:active{background:var(--accent-dark);}
+  .btn-secondary{background:var(--surface-2);color:var(--text);border:1px solid var(--border);}
+  .btn-secondary:active{background:var(--surface);}
+
+  .divider{
+    display:flex;align-items:center;gap:10px;
+    color:var(--text-muted);font-size:12.5px;
+    margin:14px 0;
+  }
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--border);}
+
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:13px;color:var(--text-muted);margin-bottom:6px;}
+  .field input, .manual-row input{
+    width:100%;padding:12px 13px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--text);
+    font-family:var(--font-ui);
+    font-size:15.5px;
+  }
+  .field input:focus, .manual-row input:focus, .search-input:focus{
+    outline:2px solid var(--accent-2);outline-offset:1px;border-color:var(--accent-2);
+  }
+  .field select{
+    width:100%;padding:12px 13px;background:var(--surface-2);border:1px solid var(--border);
+    border-radius:8px;color:var(--text);font-family:var(--font-ui);font-size:15.5px;
+  }
+  .field select:focus{outline:2px solid var(--accent-2);outline-offset:1px;border-color:var(--accent-2);}
+  .field textarea{
+    width:100%;padding:12px 13px;background:var(--surface-2);border:1px solid var(--border);
+    border-radius:8px;color:var(--text);font-family:var(--font-ui);font-size:15px;resize:vertical;
+  }
+  .field textarea:focus{outline:2px solid var(--accent-2);outline-offset:1px;border-color:var(--accent-2);}
+  .member-row{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:11px 14px;margin-bottom:8px;
+  }
+  .member-name{font-size:15px;font-weight:600;margin:0;}
+  .member-meta{font-size:12.5px;color:var(--text-muted);margin:2px 0 0;}
+  .member-del{
+    background:none;border:none;color:var(--accent);font-size:22px;line-height:1;
+    cursor:pointer;padding:6px 10px;font-family:var(--font-ui);
+  }
+  .modal{
+    position:fixed;inset:0;z-index:30;background:rgba(0,0,0,0.6);
+    align-items:center;justify-content:center;padding:20px;
+  }
+  .modal-box{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:20px;width:100%;max-width:380px;
+  }
+  .modal-box p{margin:0 0 14px;font-size:15px;line-height:1.5;}
+  .modal-box input{
+    width:100%;padding:12px 13px;background:var(--surface-2);border:1px solid var(--border);
+    border-radius:8px;color:var(--text);font-family:var(--font-ui);font-size:15.5px;margin-bottom:14px;
+  }
+  .modal-actions{display:flex;gap:10px;}
+  .modal-actions .btn{margin-bottom:0;}
+  .cat-title{font-size:14px;font-weight:600;color:var(--accent-2);margin:20px 0 10px;}
+  .cat-title:first-child{margin-top:4px;}
+  .manual-row{display:flex;gap:8px;}
+  .manual-row input{flex:1;}
+  .manual-row .btn{width:auto;white-space:nowrap;margin-bottom:0;padding:12px 16px;}
+
+  .form-code-row{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .item-code{
+    font-family:var(--font-mono);font-size:13px;color:var(--accent-2);
+    background:rgba(242,183,5,0.1);padding:4px 9px;border-radius:6px;
+    word-break:break-all;
+  }
+  .btn-link{
+    background:none;border:none;color:var(--text-muted);
+    font-size:13.5px;text-decoration:underline;cursor:pointer;font-family:var(--font-ui);
+    padding:4px;white-space:nowrap;
+  }
+  .btn-link-danger{
+    background:none;border:none;color:var(--accent);
+    font-size:14px;text-decoration:underline;cursor:pointer;font-family:var(--font-ui);
+    display:block;margin:4px auto 0;padding:8px;
+  }
+
+  .search-input{
+    width:100%;padding:13px 14px;border-radius:9px;border:1px solid var(--border);
+    background:var(--surface-2);color:var(--text);font-family:var(--font-ui);font-size:15.5px;
+    margin-bottom:14px;
+  }
+
+  .item-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:14px 16px;margin-bottom:10px;cursor:pointer;
+  }
+  .item-card:active{border-color:var(--accent-2);}
+  .item-title{font-size:16px;font-weight:600;margin:0 0 4px;}
+  .item-sub{font-size:13.5px;color:var(--text-muted);margin:0 0 8px;}
+  .item-card .item-code{font-size:11.5px;}
+
+  .empty{text-align:center;padding:56px 20px;color:var(--text-muted);font-size:14px;line-height:1.5;}
+
+  .tabbar{
+    position:fixed;left:0;right:0;bottom:0;
+    display:flex;
+    max-width:560px;margin:0 auto;
+    background:var(--surface);
+    border-top:1px solid var(--border);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    z-index:10;
+  }
+  .tab-btn{
+    flex:1;background:none;border:none;color:var(--text-muted);
+    font-family:var(--font-ui);font-size:12.5px;
+    padding:11px 0 9px;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    cursor:pointer;
+  }
+  .tab-btn.active{color:var(--accent-2);}
+  .tab-btn svg{width:22px;height:22px;}
+  .tab-icon-wrap{position:relative;display:inline-flex;}
+  .tab-badge{
+    position:absolute;top:-6px;right:-9px;
+    background:var(--accent);color:#fff;
+    font-family:var(--font-mono);font-size:10.5px;font-weight:600;
+    min-width:16px;height:16px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    padding:0 3px;line-height:1;
+  }
+
+  .status-badge{
+    display:inline-block;font-size:13px;padding:6px 11px;border-radius:20px;
+    margin-bottom:10px;font-weight:600;
+  }
+  .status-badge.st-verfuegbar{background:rgba(63,163,77,0.15);color:#6FCB7F;}
+  .status-badge.st-in_waesche{background:rgba(242,183,5,0.14);color:var(--accent-2);}
+  .status-badge.st-zurueck{background:rgba(214,64,42,0.16);color:#F1937F;}
+  .status-actions{display:flex;flex-wrap:wrap;gap:8px;}
+  .status-actions button{
+    flex:1;min-width:140px;padding:11px 12px;border-radius:8px;
+    border:1px solid var(--border);background:var(--surface-2);color:var(--text);
+    font-family:var(--font-ui);font-size:13.5px;font-weight:600;cursor:pointer;
+  }
+  .status-actions button:active{border-color:var(--accent-2);}
+
+  .section-title{
+    font-size:14px;font-weight:600;color:var(--text-muted);
+    margin:0 0 10px;padding-top:4px;
+  }
+  #laundry-out-section{margin-top:26px;}
+
+  .toast{
+    position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));
+    transform:translate(-50%,12px);
+    background:var(--surface-2);border:1px solid var(--border);
+    color:var(--text);padding:11px 18px;border-radius:24px;font-size:13.5px;
+    opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;
+    max-width:88%;text-align:center;z-index:20;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="app-header">
+    <div class="header-row">
+      <div>
+        <h1 class="app-title">Kleiderkammer</h1>
+        <p class="app-sub">Freiwillige Feuerwehr</p>
+      </div>
+      <div class="stat-block">
+        <div class="stat" id="stat-count">0</div>
+        <div class="stat-label">erfasst</div>
+      </div>
+    </div>
+    <div class="db-banner" id="db-banner" style="display:none;"></div>
+  </header>
+
+  <main class="app-main">
+
+    <section id="view-scan" class="view">
+
+      <div id="scan-intro">
+        <div class="scanner-wrap" id="scanner-wrap">
+          <div id="reader"></div>
+          <div class="scan-placeholder" id="scan-placeholder">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8V6a2 2 0 0 1 2-2h2M4 16v2a2 2 0 0 0 2 2h2M20 8V6a2 2 0 0 0-2-2h-2M20 16v2a2 2 0 0 1-2 2h-2"/><rect x="8" y="9" width="8" height="6" rx="1"/></svg>
+            <p>Kamera starten, um den QR-Code oder Barcode am Kleidungsstück zu scannen.</p>
+          </div>
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+        </div>
+
+        <button class="btn btn-primary" id="btn-start-scan">Kamera starten</button>
+        <button class="btn btn-secondary" id="btn-stop-scan" style="display:none;">Scannen beenden</button>
+        <button class="btn btn-secondary" id="btn-photo-scan">Foto vom Code aufnehmen</button>
+        <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none;">
+        <div id="file-reader" style="display:none;"></div>
+
+        <div class="divider"><span>oder Code manuell eingeben</span></div>
+
+        <div class="manual-row">
+          <input type="text" id="manual-code" placeholder="z. B. 004821">
+          <button class="btn btn-secondary" id="btn-manual-go">Übernehmen</button>
+        </div>
+      </div>
+
+      <div id="scan-form" style="display:none;">
+        <div class="form-code-row">
+          <span class="item-code" id="form-code">—</span>
+          <button class="btn-link" id="btn-rescan">Neu scannen</button>
+        </div>
+
+        <div class="field">
+          <label for="form-kategorie">Kategorie</label>
+          <select id="form-kategorie">
+            <option value="">Bitte wählen</option>
+            <option value="POOL">POOL</option>
+            <option value="Aktiv">Aktiv</option>
+            <option value="Zubehör">Zubehör</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="form-art">Art des Kleidungsstücks</label>
+          <input list="art-options" id="form-art" placeholder="z. B. Einsatzjacke">
+          <datalist id="art-options">
+            <option value="Einsatzjacke">
+            <option value="Einsatzhose">
+            <option value="Überziehhose">
+            <option value="Dienstjacke">
+            <option value="Dienstshirt">
+            <option value="Handschuhe">
+            <option value="Helm">
+            <option value="Stiefel">
+          </datalist>
+        </div>
+
+        <div class="field">
+          <label for="form-groesse">Größe</label>
+          <input type="text" id="form-groesse" placeholder="z. B. 52 oder L">
+        </div>
+
+        <div class="field">
+          <label for="form-mitglied">Mitglied</label>
+          <select id="form-mitglied"></select>
+        </div>
+
+        <div class="field">
+          <label for="form-spint">Spint</label>
+          <input type="text" id="form-spint" placeholder="z. B. Spint 14">
+        </div>
+
+        <div class="field" id="status-row" style="display:none;">
+          <label>Status</label>
+          <div class="status-badge" id="status-badge"></div>
+          <div class="status-actions" id="status-actions"></div>
+        </div>
+
+        <button class="btn btn-primary" id="btn-save">Speichern</button>
+        <button class="btn-link-danger" id="btn-delete" style="display:none;">Eintrag löschen</button>
+      </div>
+
+    </section>
+
+    <section id="view-inventory" class="view" style="display:none;">
+      <input type="text" class="search-input" id="search-input" placeholder="Suche nach Name, Spint, Art, Code …">
+      <div id="list"></div>
+    </section>
+
+    <section id="view-laundry" class="view" style="display:none;">
+      <div id="laundry-back-section">
+        <h2 class="section-title">Zurück – bitte einsortieren</h2>
+        <div id="laundry-back-list"></div>
+      </div>
+      <div id="laundry-out-section">
+        <h2 class="section-title">Aktuell in der Wäsche</h2>
+        <div id="laundry-out-list"></div>
+      </div>
+    </section>
+
+    <section id="view-members" class="view" style="display:none;">
+      <h2 class="section-title">Mitglied hinzufügen</h2>
+      <div class="field">
+        <input type="text" id="member-name" placeholder="Name">
+      </div>
+      <div class="field">
+        <input type="text" id="member-spint" placeholder="Spint (optional)">
+      </div>
+      <button class="btn btn-primary" id="btn-member-add">Hinzufügen</button>
+
+      <div class="divider"><span>oder viele auf einmal</span></div>
+
+      <div class="field">
+        <label for="member-import">Ein Mitglied pro Zeile, optional mit Spint: Name; Spint</label>
+        <textarea id="member-import" rows="5" placeholder="Max Mustermann; 14&#10;Erika Beispiel; 15"></textarea>
+      </div>
+      <button class="btn btn-secondary" id="btn-member-import">Liste importieren</button>
+
+      <h2 class="section-title" id="member-list-title" style="margin-top:24px;">Mitglieder</h2>
+      <div id="member-list"></div>
+
+      <h2 class="section-title" style="margin-top:28px;">Datensicherung</h2>
+      <p class="member-meta" style="margin:0 0 12px;line-height:1.5;">Kopiere die Sicherung und speichere sie z. B. in einer Notiz oder schick sie dir selbst per WhatsApp. Damit kannst du alle Daten jederzeit wiederherstellen, auch auf einem anderen Gerät.</p>
+      <button class="btn btn-secondary" id="btn-backup-copy">Sicherung kopieren</button>
+      <div class="field">
+        <textarea id="backup-text" rows="4" placeholder="Hier eine Sicherung einfügen, um sie wiederherzustellen"></textarea>
+      </div>
+      <button class="btn btn-secondary" id="btn-backup-restore">Sicherung einspielen</button>
+    </section>
+
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab-btn active" data-tab="scan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8V6a2 2 0 0 1 2-2h2M4 16v2a2 2 0 0 0 2 2h2M20 8V6a2 2 0 0 0-2-2h-2M20 16v2a2 2 0 0 1-2 2h-2"/><rect x="8" y="9" width="8" height="6" rx="1"/></svg>
+      Scannen
+    </button>
+    <button class="tab-btn" data-tab="inventory">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      Inventar
+    </button>
+    <button class="tab-btn" data-tab="laundry">
+      <span class="tab-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="13" r="6"/><circle cx="12" cy="13" r="2.4"/><path d="M8 5h8M6 5V4a1 1 0 0 1 1-1h1M8 3.2h.01"/></svg>
+        <span class="tab-badge" id="tab-badge" style="display:none;">0</span>
+      </span>
+      Wäsche
+    </button>
+    <button class="tab-btn" data-tab="members">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M17 14c2.5 0 4.5 2 4.5 4.5"/></svg>
+      Mitglieder
+    </button>
+  </nav>
+
+  <div class="modal" id="modal" style="display:none;">
+    <div class="modal-box">
+      <p id="modal-msg"></p>
+      <input type="text" id="modal-input" style="display:none;">
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="modal-cancel" type="button">Abbrechen</button>
+        <button class="btn btn-primary" id="modal-ok" type="button">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var firebaseConfig = {
+    apiKey: "AIzaSyCv6oZ6unTHVud1KqlLfSh3AT4ElMnJCyI",
+    authDomain: "kleiderkammer-2.firebaseapp.com",
+    projectId: "kleiderkammer-2",
+    storageBucket: "kleiderkammer-2.firebasestorage.app",
+    messagingSenderId: "859207242579",
+    appId: "1:859207242579:web:fd1968792e41956c9e87a6"
+  };
+
+  var db = null;
+  var items = [];
+  var editingId = null;
+  var scanning = false;
+  var html5QrCode = null;
+
+  var el = {};
+  function q(id){ return document.getElementById(id); }
+
+  document.addEventListener('DOMContentLoaded', init);
+
+  async function init(){
+    el.statCount = q('stat-count');
+    el.dbBanner = q('db-banner');
+    el.viewScan = q('view-scan');
+    el.viewInventory = q('view-inventory');
+    el.scannerWrap = q('scanner-wrap');
+    el.scanIntro = q('scan-intro');
+    el.scanForm = q('scan-form');
+    el.btnStartScan = q('btn-start-scan');
+    el.btnStopScan = q('btn-stop-scan');
+    el.manualCode = q('manual-code');
+    el.btnManualGo = q('btn-manual-go');
+    el.formCode = q('form-code');
+    el.formArt = q('form-art');
+    el.formGroesse = q('form-groesse');
+    el.formMitglied = q('form-mitglied');
+    el.formSpint = q('form-spint');
+    el.formKategorie = q('form-kategorie');
+    el.viewMembers = q('view-members');
+    el.memberName = q('member-name');
+    el.memberSpint = q('member-spint');
+    el.memberImport = q('member-import');
+    el.memberList = q('member-list');
+    el.memberListTitle = q('member-list-title');
+    el.btnSave = q('btn-save');
+    el.btnDelete = q('btn-delete');
+    el.btnRescan = q('btn-rescan');
+    el.searchInput = q('search-input');
+    el.list = q('list');
+    el.toast = q('toast');
+    el.tabButtons = document.querySelectorAll('.tab-btn');
+    el.statusRow = q('status-row');
+    el.statusBadge = q('status-badge');
+    el.statusActions = q('status-actions');
+    el.tabBadge = q('tab-badge');
+    el.viewLaundry = q('view-laundry');
+    el.laundryBackList = q('laundry-back-list');
+    el.laundryOutList = q('laundry-out-list');
+    el.laundryBackSection = q('laundry-back-section');
+    el.laundryOutSection = q('laundry-out-section');
+
+    el.btnStartScan.addEventListener('click', startScanner);
+    el.btnStopScan.addEventListener('click', stopScanner);
+    q('btn-photo-scan').addEventListener('click', function(){ q('photo-input').click(); });
+    q('photo-input').addEventListener('change', function(ev){
+      var file = ev.target.files && ev.target.files[0];
+      if(!file) return;
+      showToast('Code wird gelesen …');
+      var reader = new Html5Qrcode('file-reader', { verbose: false });
+      reader.scanFile(file, false).then(function(text){
+        loadCodeIntoForm(text);
+      }).catch(function(){
+        showToast('Kein Code erkannt. Näher ran, mehr Licht, oder Code manuell eingeben.');
+      }).then(function(){
+        ev.target.value = '';
+        try{ reader.clear(); }catch(e){}
+      });
+    });
+    el.btnManualGo.addEventListener('click', function(){
+      var v = el.manualCode.value.trim();
+      if(!v){ showToast('Bitte einen Code eingeben.'); return; }
+      loadCodeIntoForm(v);
+    });
+    el.manualCode.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ el.btnManualGo.click(); }
+    });
+    el.btnRescan.addEventListener('click', resetScanForm);
+    el.btnSave.addEventListener('click', saveItem);
+    el.formArt.addEventListener('change', function(){
+      var a = el.formArt.value.trim().toLowerCase();
+      if(!el.formKategorie.value && ['handschuhe','helm','stiefel'].indexOf(a) !== -1){
+        el.formKategorie.value = 'Zubehör';
+      }
+    });
+    el.btnDelete.addEventListener('click', deleteItem);
+    el.searchInput.addEventListener('input', renderList);
+
+    el.tabButtons.forEach(function(btn){
+      btn.addEventListener('click', function(){ switchTab(btn.getAttribute('data-tab')); });
+    });
+
+    document.addEventListener('visibilitychange', function(){
+      if(document.hidden){ stopScanner(); }
+    });
+
+    refreshMemberSelect('');
+    renderMembers();
+    wireMembers();
+    wireBackup();
+    try{
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      subscribeItems();
+      subscribeMembers();
+    }catch(e){
+      db = null;
+      showDbBanner('Keine Datenbankverbindung. Änderungen werden nicht gespeichert. Fehler: ' + (e && e.message ? e.message : e));
+    }
+  }
+
+
+  var members = [];
+
+  function saveMembers(){
+    if(!db) return;
+    db.collection('meta').doc('members').set({ list: members }).catch(function(){
+      showToast('Mitglieder konnten nicht gespeichert werden.');
+    });
+  }
+  function subscribeMembers(){
+    db.collection('meta').doc('members').onSnapshot(function(snap){
+      var data = snap.exists ? (snap.data() || {}) : {};
+      members = Array.isArray(data.list) ? data.list : [];
+      refreshMemberSelect();
+      renderMembers();
+    }, function(err){
+      showDbBanner('Mitgliederliste konnte nicht geladen werden (' + err.code + ').');
+    });
+  }
+  function sortedMembers(){
+    return members.slice().sort(function(a, b){ return a.name.localeCompare(b.name, 'de'); });
+  }
+  function addMember(name, spint){
+    name = (name || '').trim();
+    if(!name) return false;
+    var exists = members.some(function(m){ return m.name.toLowerCase() === name.toLowerCase(); });
+    if(exists) return false;
+    members.push({ name: name, spint: (spint || '').trim() });
+    return true;
+  }
+
+  function refreshMemberSelect(selected){
+    var cur = (selected !== undefined) ? selected : el.formMitglied.value;
+    var sel = el.formMitglied;
+    sel.innerHTML = '';
+    function opt(value, label){
+      var o = document.createElement('option');
+      o.value = value; o.textContent = label;
+      sel.appendChild(o);
+    }
+    opt('', 'Bitte wählen');
+    var names = sortedMembers().map(function(m){ return m.name; });
+    names.forEach(function(n){ opt(n, n); });
+    if(cur && names.indexOf(cur) === -1){ opt(cur, cur); }
+    opt('__new__', '+ Neues Mitglied …');
+    sel.value = cur || '';
+  }
+
+  function renderMembers(){
+    if(!el.memberList) return;
+    el.memberList.innerHTML = '';
+    el.memberListTitle.textContent = 'Mitglieder (' + members.length + ')';
+    if(members.length === 0){
+      var empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = 'Noch keine Mitglieder hinterlegt.';
+      el.memberList.appendChild(empty);
+      return;
+    }
+    sortedMembers().forEach(function(m){
+      var count = items.filter(function(i){ return i.mitglied === m.name; }).length;
+      var row = document.createElement('div');
+      row.className = 'member-row';
+      var info = document.createElement('div');
+      var n = document.createElement('p'); n.className = 'member-name'; n.textContent = m.name;
+      var meta = document.createElement('p'); meta.className = 'member-meta';
+      var parts = [];
+      if(m.spint) parts.push(m.spint);
+      parts.push(count + (count === 1 ? ' Stück' : ' Stücke'));
+      meta.textContent = parts.join(' · ');
+      info.appendChild(n); info.appendChild(meta);
+      var del = document.createElement('button');
+      del.className = 'member-del'; del.type = 'button'; del.textContent = '×';
+      del.setAttribute('aria-label', m.name + ' entfernen');
+      del.addEventListener('click', function(){
+        showConfirm(m.name + ' aus der Mitgliederliste entfernen? Bestehende Einträge bleiben erhalten.', function(){
+          members = members.filter(function(x){ return x.name !== m.name; });
+          saveMembers(); refreshMemberSelect(); renderMembers();
+        });
+      });
+      row.appendChild(info); row.appendChild(del);
+      el.memberList.appendChild(row);
+    });
+  }
+
+  function wireMembers(){
+    q('btn-member-add').addEventListener('click', function(){
+      var name = el.memberName.value.trim();
+      if(!name){ showToast('Bitte einen Namen eingeben.'); return; }
+      if(addMember(name, el.memberSpint.value)){
+        saveMembers(); refreshMemberSelect(); renderMembers();
+        el.memberName.value = ''; el.memberSpint.value = '';
+        showToast('Mitglied hinzugefügt.');
+      }else{
+        showToast('Dieses Mitglied gibt es schon.');
+      }
+    });
+    q('btn-member-import').addEventListener('click', function(){
+      var lines = el.memberImport.value.split('\n');
+      var added = 0;
+      lines.forEach(function(line){
+        var parts = line.split(/;|\t/);
+        if(addMember(parts[0], parts[1])) added++;
+      });
+      if(added){
+        saveMembers(); refreshMemberSelect(); renderMembers();
+        el.memberImport.value = '';
+      }
+      showToast(added + ' Mitglied(er) importiert.');
+    });
+    el.formMitglied.addEventListener('change', function(){
+      var v = el.formMitglied.value;
+      if(v === '__new__'){
+        showPrompt('Name des neuen Mitglieds:', function(name){
+          name = (name || '').trim();
+          if(name){
+            addMember(name, '');
+            saveMembers(); renderMembers();
+            refreshMemberSelect(name);
+          }else{
+            refreshMemberSelect('');
+          }
+        }, function(){ refreshMemberSelect(''); });
+        return;
+      }
+      var m = members.find(function(x){ return x.name === v; });
+      if(m && m.spint && !el.formSpint.value.trim()){ el.formSpint.value = m.spint; }
+    });
+  }
+
+  function wireBackup(){
+    var area = q('backup-text');
+    q('btn-backup-copy').addEventListener('click', function(){
+      var stored = {};
+      items.forEach(function(i){ var c = Object.assign({}, i); delete c.id; stored[i.id] = c; });
+      var json = JSON.stringify({ version: 1, exportedAt: Date.now(), items: stored, members: members });
+      area.value = json;
+      var done = function(){ showToast('Sicherung kopiert.'); };
+      var fallback = function(){
+        area.focus(); area.select();
+        try{ document.execCommand('copy'); done(); }
+        catch(e){ showToast('Bitte den Text im Feld manuell kopieren.'); }
+      };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(json).then(done).catch(fallback);
+      }else{ fallback(); }
+    });
+    q('btn-backup-restore').addEventListener('click', function(){
+      var data;
+      try{ data = JSON.parse(area.value); }catch(e){ showToast('Das ist keine gültige Sicherung.'); return; }
+      if(!data || typeof data.items !== 'object'){ showToast('Das ist keine gültige Sicherung.'); return; }
+      var ids = Object.keys(data.items || {});
+      var mem = Array.isArray(data.members) ? data.members : [];
+      showConfirm(ids.length + ' Einträge und ' + mem.length + ' Mitglieder zusammenführen? Neuere Stände gewinnen, nichts wird gelöscht.', function(){
+      ids.forEach(function(id){
+        var incoming = data.items[id];
+        var existing = items.find(function(i){ return i.id === id; });
+        if(!existing || (incoming.updatedAt || 0) > (existing.updatedAt || 0)){
+          db.collection('items').doc(id).set(incoming);
+        }
+      });
+      mem.forEach(function(m){ if(m && m.name) addMember(m.name, m.spint); });
+      saveMembers(); refreshMemberSelect(); renderMembers();
+      area.value = '';
+      showToast('Sicherung eingespielt.');
+      });
+    });
+  }
+
+  function openModal(msg, withInput, onOk, onCancel){
+    var modal = q('modal'), input = q('modal-input');
+    q('modal-msg').textContent = msg;
+    input.style.display = withInput ? 'block' : 'none';
+    input.value = '';
+    modal.style.display = 'flex';
+    if(withInput){ setTimeout(function(){ input.focus(); }, 50); }
+    function close(){
+      modal.style.display = 'none';
+      q('modal-ok').onclick = null;
+      q('modal-cancel').onclick = null;
+    }
+    q('modal-ok').onclick = function(){ var v = input.value; close(); onOk(v); };
+    q('modal-cancel').onclick = function(){ close(); if(onCancel) onCancel(); };
+  }
+  function showConfirm(msg, onOk){ openModal(msg, false, onOk); }
+  function showPrompt(msg, onOk, onCancel){ openModal(msg, true, onOk, onCancel); }
+
+  function showDbBanner(msg){
+    el.dbBanner.textContent = msg;
+    el.dbBanner.style.display = 'block';
+  }
+
+  function switchTab(tab){
+    el.tabButtons.forEach(function(btn){
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+    });
+    el.viewScan.style.display = (tab === 'scan') ? 'block' : 'none';
+    el.viewInventory.style.display = (tab === 'inventory') ? 'block' : 'none';
+    el.viewLaundry.style.display = (tab === 'laundry') ? 'block' : 'none';
+    el.viewMembers.style.display = (tab === 'members') ? 'block' : 'none';
+    if(tab !== 'scan'){ stopScanner(); }
+  }
+
+  function subscribeItems(){
+    var col = db.collection('items');
+    col.orderBy('updatedAt', 'desc').onSnapshot(function(snap){
+      items = snap.docs.map(function(d){
+        var data = d.data() || {};
+        data.id = d.id;
+        return data;
+      });
+      el.statCount.textContent = items.length;
+      renderList();
+      renderLaundryLists();
+      renderMembers();
+    }, function(err){
+      showDbBanner('Verbindung zur Datenbank unterbrochen (' + err.code + ').');
+    });
+  }
+
+  function sanitizeCode(raw){
+    var s = String(raw).trim().replace(/[^a-zA-Z0-9_\-.~:@+]/g, '_').slice(0, 150);
+    return s || ('id_' + Date.now());
+  }
+
+  function startScanner(){
+    if(scanning) return;
+    el.scanPlaceholder = q('scan-placeholder');
+    q('reader').style.display = 'block';
+    html5QrCode = new Html5Qrcode('reader', {
+      verbose: false,
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.CODE_93,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.UPC_E,
+        Html5QrcodeSupportedFormats.ITF,
+        Html5QrcodeSupportedFormats.DATA_MATRIX
+      ]
+    });
+    html5QrCode.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 250, height: 150 } },
+      onScanSuccess,
+      function(){ /* ignore per-frame no-match */ }
+    ).then(function(){
+      scanning = true;
+      el.scannerWrap.classList.add('scanning');
+      el.btnStartScan.style.display = 'none';
+      el.btnStopScan.style.display = 'block';
+    }).catch(function(){
+      showToast('Live-Kamera hier nicht verfügbar. Nutze "Foto vom Code aufnehmen".');
+      q('reader').style.display = 'none';
+    });
+  }
+
+  function stopScanner(){
+    if(!scanning || !html5QrCode) return;
+    html5QrCode.stop().then(function(){
+      html5QrCode.clear();
+      finishStopUi();
+    }).catch(function(){
+      finishStopUi();
+    });
+  }
+
+  function finishStopUi(){
+    scanning = false;
+    el.scannerWrap.classList.remove('scanning');
+    q('reader').style.display = 'none';
+    el.btnStartScan.style.display = 'block';
+    el.btnStopScan.style.display = 'none';
+  }
+
+  function onScanSuccess(decodedText){
+    if(!scanning) return;
+    scanning = false; // guard against duplicate fires while stopping
+    if(navigator.vibrate){ navigator.vibrate(70); }
+    stopScanner();
+    loadCodeIntoForm(decodedText);
+  }
+
+  async function loadCodeIntoForm(rawCode){
+    var id = sanitizeCode(rawCode);
+    editingId = id;
+    el.formCode.textContent = rawCode;
+    el.scanIntro.style.display = 'none';
+    el.scanForm.style.display = 'block';
+    el.manualCode.value = '';
+
+    var existing = items.find(function(i){ return i.id === id; });
+    if(existing){
+      fillForm(existing);
+      el.btnDelete.style.display = 'block';
+      renderStatusUI(existing);
+      showToast('Vorhandener Eintrag geladen.');
+      return;
+    }
+    if(db){
+      try{
+        var snap = await db.collection('items').doc(id).get();
+        if(snap.exists){
+          var data = snap.data() || {};
+          data.id = id;
+          fillForm(data);
+          el.btnDelete.style.display = 'block';
+          renderStatusUI(data);
+          showToast('Vorhandener Eintrag geladen.');
+          return;
+        }
+      }catch(e){ /* fall through to new entry */ }
+    }
+    clearFormFields();
+    el.btnDelete.style.display = 'none';
+    el.statusRow.style.display = 'none';
+  }
+
+  function fillForm(data){
+    el.formKategorie.value = data.kategorie || '';
+    el.formArt.value = data.art || '';
+    el.formGroesse.value = data.groesse || '';
+    refreshMemberSelect(data.mitglied || '');
+    el.formSpint.value = data.spint || '';
+  }
+
+  function clearFormFields(){
+    el.formKategorie.value = '';
+    el.formArt.value = '';
+    el.formGroesse.value = '';
+    el.formMitglied.value = '';
+    el.formSpint.value = '';
+  }
+
+  function resetScanForm(){
+    editingId = null;
+    el.scanForm.style.display = 'none';
+    el.scanIntro.style.display = 'block';
+    clearFormFields();
+    el.manualCode.value = '';
+    el.statusRow.style.display = 'none';
+  }
+
+  var STATUS_LABELS = {
+    verfuegbar: 'Verfügbar',
+    in_waesche: 'In der Wäsche',
+    zurueck: 'Zurück – bitte einsortieren'
+  };
+
+  function renderStatusUI(item){
+    var status = item.status || 'verfuegbar';
+    el.statusRow.style.display = 'block';
+    el.statusBadge.className = 'status-badge st-' + status;
+    el.statusBadge.textContent = STATUS_LABELS[status];
+    el.statusActions.innerHTML = '';
+
+    function makeBtn(label, nextStatus){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = label;
+      b.addEventListener('click', function(){ setStatus(item.id, nextStatus); });
+      return b;
+    }
+
+    if(status === 'verfuegbar'){
+      el.statusActions.appendChild(makeBtn('In die Wäsche geben', 'in_waesche'));
+    }else if(status === 'in_waesche'){
+      el.statusActions.appendChild(makeBtn('Ist zurück', 'zurueck'));
+      el.statusActions.appendChild(makeBtn('Doch verfügbar', 'verfuegbar'));
+    }else if(status === 'zurueck'){
+      el.statusActions.appendChild(makeBtn('Einsortiert – erledigt', 'verfuegbar'));
+    }
+  }
+
+  function setStatus(id, newStatus){
+    if(!db) { showToast('Keine Datenbankverbindung.'); return; }
+    db.collection('items').doc(id).update({
+      status: newStatus,
+      statusUpdatedAt: Date.now()
+    }).then(function(){
+      showToast(STATUS_LABELS[newStatus] + '.');
+      var current = items.find(function(i){ return i.id === id; });
+      if(current){
+        current.status = newStatus;
+        if(editingId === id){ renderStatusUI(current); }
+      }
+    }).catch(function(){
+      showToast('Status konnte nicht aktualisiert werden.');
+    });
+  }
+
+  function renderLaundryLists(){
+    var back = items.filter(function(i){ return i.status === 'zurueck'; })
+      .sort(function(a,b){ return (b.statusUpdatedAt||0) - (a.statusUpdatedAt||0); });
+    var out = items.filter(function(i){ return i.status === 'in_waesche'; })
+      .sort(function(a,b){ return (b.statusUpdatedAt||0) - (a.statusUpdatedAt||0); });
+
+    el.tabBadge.style.display = back.length > 0 ? 'flex' : 'none';
+    el.tabBadge.textContent = back.length;
+
+    el.laundryBackSection.style.display = back.length ? 'block' : 'none';
+    el.laundryOutSection.style.display = out.length ? 'block' : 'none';
+
+    el.laundryBackList.innerHTML = '';
+    el.laundryOutList.innerHTML = '';
+
+    if(back.length === 0 && out.length === 0){
+      var empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = 'Aktuell ist nichts in der Wäsche gemeldet.';
+      el.laundryBackList.appendChild(empty);
+    }
+
+    back.forEach(function(item){ el.laundryBackList.appendChild(buildLaundryCard(item)); });
+    out.forEach(function(item){ el.laundryOutList.appendChild(buildLaundryCard(item)); });
+  }
+
+  function buildLaundryCard(item){
+    var card = document.createElement('div');
+    card.className = 'item-card';
+
+    var title = document.createElement('p');
+    title.className = 'item-title';
+    title.textContent = (item.art || 'Ohne Bezeichnung') + (item.groesse ? ' · Gr. ' + item.groesse : '');
+
+    var sub = document.createElement('p');
+    sub.className = 'item-sub';
+    var subParts = [];
+    if(item.mitglied) subParts.push(item.mitglied);
+    if(item.spint) subParts.push(item.spint);
+    sub.textContent = subParts.length ? subParts.join(' · ') : 'Noch keinem Mitglied zugeordnet';
+
+    var code = document.createElement('span');
+    code.className = 'item-code';
+    code.textContent = item.code || item.id;
+
+    card.appendChild(title);
+    card.appendChild(sub);
+    card.appendChild(code);
+
+    card.addEventListener('click', function(){
+      switchTab('scan');
+      editingId = item.id;
+      el.formCode.textContent = item.code || item.id;
+      el.scanIntro.style.display = 'none';
+      el.scanForm.style.display = 'block';
+      fillForm(item);
+      el.btnDelete.style.display = 'block';
+      renderStatusUI(item);
+    });
+
+    return card;
+  }
+
+  function saveItem(){
+    if(!editingId){
+      showToast('Bitte zuerst einen Code scannen oder eingeben.');
+      return;
+    }
+    if(!db){
+      showToast('Keine Datenbankverbindung – nicht gespeichert.');
+      return;
+    }
+    var data = {
+      code: el.formCode.textContent,
+      kategorie: el.formKategorie.value,
+      art: el.formArt.value.trim(),
+      groesse: el.formGroesse.value.trim(),
+      mitglied: el.formMitglied.value.trim(),
+      spint: el.formSpint.value.trim(),
+      updatedAt: Date.now()
+    };
+    db.collection('items').doc(editingId).set(data).then(function(){
+      showToast('Gespeichert.');
+      resetScanForm();
+    }).catch(function(err){
+      showToast('Speichern fehlgeschlagen (' + (err && err.code ? err.code : 'Fehler') + ').');
+    });
+  }
+
+  function deleteItem(){
+    if(!editingId || !db) return;
+    var delId = editingId;
+    showConfirm('Diesen Eintrag wirklich löschen?', function(){
+      db.collection('items').doc(delId).delete().then(function(){
+        showToast('Eintrag gelöscht.');
+        resetScanForm();
+      }).catch(function(){
+        showToast('Löschen fehlgeschlagen.');
+      });
+    });
+  }
+
+  function renderList(){
+    var qv = el.searchInput.value.trim().toLowerCase();
+    var filtered = !qv ? items : items.filter(function(i){
+      return [i.code, i.kategorie, i.art, i.groesse, i.mitglied, i.spint].some(function(v){
+        return (v || '').toString().toLowerCase().indexOf(qv) !== -1;
+      });
+    });
+
+    el.list.innerHTML = '';
+
+    if(filtered.length === 0){
+      var empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = items.length === 0
+        ? 'Noch keine Kleidungsstücke erfasst. Scanne den ersten Code, um loszulegen.'
+        : 'Keine Treffer für diese Suche.';
+      el.list.appendChild(empty);
+      return;
+    }
+
+    var CAT_ORDER = ['POOL', 'Aktiv', 'Zubehör', 'Ohne Kategorie'];
+    function catOf(i){ return CAT_ORDER.indexOf(i.kategorie) > -1 ? i.kategorie : 'Ohne Kategorie'; }
+    filtered = filtered.slice().sort(function(a, b){ return CAT_ORDER.indexOf(catOf(a)) - CAT_ORDER.indexOf(catOf(b)); });
+    var catCounts = {};
+    filtered.forEach(function(i){ catCounts[catOf(i)] = (catCounts[catOf(i)] || 0) + 1; });
+    var lastCat = null;
+
+    filtered.forEach(function(item){
+      var cat = catOf(item);
+      if(cat !== lastCat){
+        var h = document.createElement('h2');
+        h.className = 'cat-title';
+        h.textContent = cat + ' (' + catCounts[cat] + ')';
+        el.list.appendChild(h);
+        lastCat = cat;
+      }
+      var card = document.createElement('div');
+      card.className = 'item-card';
+
+      var title = document.createElement('p');
+      title.className = 'item-title';
+      title.textContent = (item.art || 'Ohne Bezeichnung') + (item.groesse ? ' · Gr. ' + item.groesse : '');
+
+      var sub = document.createElement('p');
+      sub.className = 'item-sub';
+      var subParts = [];
+      if(item.mitglied) subParts.push(item.mitglied);
+      if(item.spint) subParts.push(item.spint);
+      sub.textContent = subParts.length ? subParts.join(' · ') : 'Noch keinem Mitglied zugeordnet';
+
+      var code = document.createElement('span');
+      code.className = 'item-code';
+      code.textContent = item.code || item.id;
+
+      card.appendChild(title);
+      card.appendChild(sub);
+      card.appendChild(code);
+
+      if(item.status && item.status !== 'verfuegbar'){
+        var statusTag = document.createElement('span');
+        statusTag.className = 'status-badge st-' + item.status;
+        statusTag.style.marginLeft = '8px';
+        statusTag.style.padding = '3px 9px';
+        statusTag.style.fontSize = '11.5px';
+        statusTag.textContent = STATUS_LABELS[item.status];
+        card.appendChild(statusTag);
+      }
+
+      card.addEventListener('click', function(){
+        switchTab('scan');
+        editingId = item.id;
+        el.formCode.textContent = item.code || item.id;
+        el.scanIntro.style.display = 'none';
+        el.scanForm.style.display = 'block';
+        fillForm(item);
+        el.btnDelete.style.display = 'block';
+        renderStatusUI(item);
+      });
+
+      el.list.appendChild(card);
+    });
+  }
+
+  var toastTimer = null;
+  function showToast(msg){
+    el.toast.textContent = msg;
+    el.toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.toast.classList.remove('show'); }, 2600);
+  }
+
+})();
+</script>
+</body>
+</html>
