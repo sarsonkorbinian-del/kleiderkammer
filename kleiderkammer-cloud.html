@@ -183,6 +183,13 @@
   }
   .member-name{font-size:15px;font-weight:600;margin:0;}
   .member-meta{font-size:12.5px;color:var(--text-muted);margin:2px 0 0;}
+  .member-actions{display:flex;align-items:center;gap:4px;}
+  .member-edit{
+    background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    font-family:var(--font-ui);font-size:13px;font-weight:600;border-radius:7px;
+    padding:7px 11px;cursor:pointer;
+  }
+  .member-edit:active{border-color:var(--accent-2);}
   .member-del{
     background:none;border:none;color:var(--accent);font-size:22px;line-height:1;
     cursor:pointer;padding:6px 10px;font-family:var(--font-ui);
@@ -409,7 +416,8 @@
     </section>
 
     <section id="view-inventory" class="view" style="display:none;">
-      <input type="text" class="search-input" id="search-input" placeholder="Suche nach Name, Spint, Art, Code …">
+      <input type="search" class="search-input" id="search-input" enterkeyhint="search" autocomplete="off" placeholder="Code, Name, Spint oder Art suchen …" style="margin-bottom:6px;">
+      <p class="member-meta" id="search-count" style="margin:0 0 14px;min-height:16px;"></p>
       <div id="list"></div>
     </section>
 
@@ -592,6 +600,20 @@
     });
     el.btnDelete.addEventListener('click', deleteItem);
     el.searchInput.addEventListener('input', renderList);
+    el.searchCount = q('search-count');
+    el.searchInput.addEventListener('keydown', function(e){
+      if(e.key !== 'Enter') return;
+      e.preventDefault();
+      var qv = el.searchInput.value.trim().toLowerCase();
+      if(!qv) return;
+      var matches = getFiltered();
+      var exact = matches.filter(function(i){ return (i.code || i.id || '').toString().toLowerCase() === qv; });
+      if(exact.length >= 1){ openItemForEdit(exact[0]); }
+      else if(matches.length === 1){ openItemForEdit(matches[0]); }
+      else if(matches.length === 0){ showToast('Kein Eintrag mit diesem Code gefunden.'); }
+      else { showToast(matches.length + ' Treffer – bitte Eintrag antippen.'); }
+      el.searchInput.blur();
+    });
 
     el.tabButtons.forEach(function(btn){
       btn.addEventListener('click', function(){ switchTab(btn.getAttribute('data-tab')); });
@@ -684,6 +706,7 @@
       var meta = document.createElement('p'); meta.className = 'member-meta';
       var parts = [];
       if(m.spint) parts.push(m.spint);
+      if(!m.spint) parts.push('kein Spint');
       parts.push(count + (count === 1 ? ' Stück' : ' Stücke'));
       meta.textContent = parts.join(' · ');
       info.appendChild(n); info.appendChild(meta);
@@ -696,7 +719,31 @@
           saveMembers(); refreshMemberSelect(); renderMembers();
         });
       });
-      row.appendChild(info); row.appendChild(del);
+      var edit = document.createElement('button');
+      edit.className = 'member-edit'; edit.type = 'button'; edit.textContent = 'Spint';
+      edit.setAttribute('aria-label', 'Spint für ' + m.name + ' ändern');
+      edit.addEventListener('click', function(){
+        showPrompt('Spint für ' + m.name + ':', function(val){
+          val = (val || '').trim();
+          m.spint = val;
+          saveMembers(); renderMembers();
+          var affected = items.filter(function(i){ return i.mitglied === m.name && (i.spint || '') !== val; });
+          if(val && affected.length){
+            showConfirm(affected.length + (affected.length === 1 ? ' Eintrag' : ' Einträge') + ' von ' + m.name + ' haben einen anderen oder keinen Spint. Auch auf "' + val + '" ändern?', function(){
+              affected.forEach(function(i){
+                db.collection('items').doc(i.id).update({ spint: val, updatedAt: Date.now() });
+              });
+              showToast('Spint aktualisiert.');
+            });
+          }else{
+            showToast('Gespeichert.');
+          }
+        }, null, m.spint || '');
+      });
+      var actions = document.createElement('div');
+      actions.className = 'member-actions';
+      actions.appendChild(edit); actions.appendChild(del);
+      row.appendChild(info); row.appendChild(actions);
       el.memberList.appendChild(row);
     });
   }
@@ -785,11 +832,11 @@
     });
   }
 
-  function openModal(msg, withInput, onOk, onCancel){
+  function openModal(msg, withInput, onOk, onCancel, initial){
     var modal = q('modal'), input = q('modal-input');
     q('modal-msg').textContent = msg;
     input.style.display = withInput ? 'block' : 'none';
-    input.value = '';
+    input.value = initial || '';
     modal.style.display = 'flex';
     if(withInput){ setTimeout(function(){ input.focus(); }, 50); }
     function close(){
@@ -801,7 +848,7 @@
     q('modal-cancel').onclick = function(){ close(); if(onCancel) onCancel(); };
   }
   function showConfirm(msg, onOk){ openModal(msg, false, onOk); }
-  function showPrompt(msg, onOk, onCancel){ openModal(msg, true, onOk, onCancel); }
+  function showPrompt(msg, onOk, onCancel, initial){ openModal(msg, true, onOk, onCancel, initial); }
 
   function showDbBanner(msg){
     el.dbBanner.textContent = msg;
@@ -1112,13 +1159,32 @@
     });
   }
 
-  function renderList(){
+  function getFiltered(){
     var qv = el.searchInput.value.trim().toLowerCase();
-    var filtered = !qv ? items : items.filter(function(i){
-      return [i.code, i.kategorie, i.art, i.groesse, i.mitglied, i.spint].some(function(v){
+    if(!qv) return items;
+    return items.filter(function(i){
+      return [i.code, i.id, i.kategorie, i.art, i.groesse, i.mitglied, i.spint].some(function(v){
         return (v || '').toString().toLowerCase().indexOf(qv) !== -1;
       });
     });
+  }
+
+  function openItemForEdit(item){
+    switchTab('scan');
+    editingId = item.id;
+    el.formCode.textContent = item.code || item.id;
+    el.scanIntro.style.display = 'none';
+    el.scanForm.style.display = 'block';
+    fillForm(item);
+    el.btnDelete.style.display = 'block';
+    renderStatusUI(item);
+    window.scrollTo(0, 0);
+  }
+
+  function renderList(){
+    var qv = el.searchInput.value.trim();
+    var filtered = getFiltered();
+    if(el.searchCount){ el.searchCount.textContent = qv ? (filtered.length + (filtered.length === 1 ? ' Treffer' : ' Treffer')) : ''; }
 
     el.list.innerHTML = '';
 
