@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -209,6 +210,15 @@
   }
   .modal-actions{display:flex;gap:10px;}
   .modal-actions .btn{margin-bottom:0;}
+  .login{
+    position:fixed;inset:0;z-index:50;background:var(--bg);
+    display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .login-box{width:100%;max-width:360px;}
+  .login-error{
+    background:rgba(214,64,42,0.12);border:1px solid rgba(214,64,42,0.35);color:#F1A79A;
+    border-radius:8px;padding:9px 12px;font-size:13px;margin:0 0 12px;line-height:1.4;
+  }
   .cat-title{font-size:14px;font-weight:600;color:var(--accent-2);margin:20px 0 10px;}
   .cat-title:first-child{margin-top:4px;}
   .manual-row{display:flex;gap:8px;}
@@ -320,6 +330,7 @@
       <div>
         <h1 class="app-title">Kleiderkammer</h1>
         <p class="app-sub">Freiwillige Feuerwehr</p>
+        <button class="btn-link" id="btn-logout" style="padding:0;margin-top:6px;display:none;">Abmelden</button>
       </div>
       <div class="stat-block">
         <div class="stat" id="stat-count">0</div>
@@ -486,6 +497,24 @@
     </button>
   </nav>
 
+  <div class="login" id="login">
+    <div class="login-box">
+      <h1 class="app-title">Kleiderkammer</h1>
+      <p class="app-sub" style="margin-bottom:22px;">Bitte anmelden</p>
+      <div class="field">
+        <label for="login-email">E-Mail</label>
+        <input type="email" id="login-email" autocomplete="username" autocapitalize="none" inputmode="email">
+      </div>
+      <div class="field">
+        <label for="login-password">Passwort</label>
+        <input type="password" id="login-password" autocomplete="current-password">
+      </div>
+      <p id="login-error" class="login-error" style="display:none;"></p>
+      <button class="btn btn-primary" id="btn-login" type="button">Anmelden</button>
+      <button class="btn-link" id="btn-reset" type="button" style="display:block;margin:4px auto 0;">Passwort vergessen?</button>
+    </div>
+  </div>
+
   <div class="modal" id="modal" style="display:none;">
     <div class="modal-box">
       <p id="modal-msg"></p>
@@ -630,8 +659,50 @@
     try{
       firebase.initializeApp(firebaseConfig);
       db = firebase.firestore();
-      subscribeItems();
-      subscribeMembers();
+      var auth = firebase.auth();
+      var subscribed = false;
+      var loginEmail = q('login-email'), loginPw = q('login-password'), loginErr = q('login-error');
+
+      function showLoginError(msg){ loginErr.textContent = msg; loginErr.style.display = 'block'; }
+      function doLogin(){
+        loginErr.style.display = 'none';
+        var email = loginEmail.value.trim(), pw = loginPw.value;
+        if(!email || !pw){ showLoginError('Bitte E-Mail und Passwort eingeben.'); return; }
+        auth.signInWithEmailAndPassword(email, pw).catch(function(err){
+          var c = err && err.code;
+          if(c === 'auth/too-many-requests'){ showLoginError('Zu viele Versuche. Bitte später erneut probieren.'); }
+          else if(c === 'auth/network-request-failed'){ showLoginError('Keine Internetverbindung.'); }
+          else { showLoginError('E-Mail oder Passwort falsch.'); }
+        });
+      }
+      q('btn-login').addEventListener('click', doLogin);
+      loginPw.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ doLogin(); } });
+      q('btn-reset').addEventListener('click', function(){
+        var email = loginEmail.value.trim();
+        if(!email){ showLoginError('Bitte oben deine E-Mail eingeben, dann erneut tippen.'); return; }
+        auth.sendPasswordResetEmail(email).then(function(){
+          loginErr.style.display = 'none';
+          showToast('Falls die Adresse bekannt ist, wurde eine E-Mail gesendet.');
+        }).catch(function(){ showToast('Das hat nicht geklappt.'); });
+      });
+      q('btn-logout').addEventListener('click', function(){
+        auth.signOut().then(function(){ window.location.reload(); });
+      });
+
+      auth.onAuthStateChanged(function(user){
+        if(user){
+          q('login').style.display = 'none';
+          q('btn-logout').style.display = 'inline';
+          if(!subscribed){
+            subscribed = true;
+            subscribeItems();
+            subscribeMembers();
+          }
+        }else{
+          q('login').style.display = 'flex';
+          q('btn-logout').style.display = 'none';
+        }
+      });
     }catch(e){
       db = null;
       showDbBanner('Keine Datenbankverbindung. Änderungen werden nicht gespeichert. Fehler: ' + (e && e.message ? e.message : e));
