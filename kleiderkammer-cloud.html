@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -345,25 +346,26 @@
     <section id="view-scan" class="view">
 
       <div id="scan-intro">
+        <p class="login-error" id="scan-mode-hint" style="display:none;background:rgba(242,183,5,0.12);border-color:rgba(242,183,5,0.4);color:var(--accent-2);">Suche: Scanne den Code des Kleidungsstücks, um den Eintrag zu öffnen.</p>
         <div class="scanner-wrap" id="scanner-wrap">
           <div id="reader"></div>
           <div class="scan-placeholder" id="scan-placeholder">
             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8V6a2 2 0 0 1 2-2h2M4 16v2a2 2 0 0 0 2 2h2M20 8V6a2 2 0 0 0-2-2h-2M20 16v2a2 2 0 0 1-2 2h-2"/><rect x="8" y="9" width="8" height="6" rx="1"/></svg>
-            <p>Kamera starten, um den QR-Code oder Barcode am Kleidungsstück zu scannen.</p>
+            <p>Kamera starten und die Patch-Nummer (z. B. W118173) oder den QR-Code ins Bild halten.</p>
           </div>
           <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
         </div>
 
         <button class="btn btn-primary" id="btn-start-scan">Kamera starten</button>
         <button class="btn btn-secondary" id="btn-stop-scan" style="display:none;">Scannen beenden</button>
-        <button class="btn btn-secondary" id="btn-photo-scan">Foto vom Code aufnehmen</button>
+        <button class="btn btn-secondary" id="btn-photo-scan">Foto vom Patch aufnehmen</button>
         <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none;">
         <div id="file-reader" style="display:none;"></div>
 
         <div class="divider"><span>oder Code manuell eingeben</span></div>
 
         <div class="manual-row">
-          <input type="text" id="manual-code" placeholder="z. B. 004821">
+          <input type="text" id="manual-code" placeholder="z. B. W118173">
           <button class="btn btn-secondary" id="btn-manual-go">Übernehmen</button>
         </div>
       </div>
@@ -427,6 +429,7 @@
     </section>
 
     <section id="view-inventory" class="view" style="display:none;">
+      <button class="btn btn-secondary" id="btn-inv-scan" type="button">Code per Kamera suchen</button>
       <input type="search" class="search-input" id="search-input" enterkeyhint="search" autocomplete="off" placeholder="Code, Name, Spint oder Art suchen …" style="margin-bottom:6px;">
       <p class="member-meta" id="search-count" style="margin:0 0 14px;min-height:16px;"></p>
       <div id="list"></div>
@@ -546,6 +549,7 @@
   var items = [];
   var editingId = null;
   var scanning = false;
+  var scanTarget = 'form';
   var html5QrCode = null;
 
   var el = {};
@@ -597,24 +601,31 @@
     el.btnStartScan.addEventListener('click', startScanner);
     el.btnStopScan.addEventListener('click', stopScanner);
     q('btn-photo-scan').addEventListener('click', function(){ q('photo-input').click(); });
-    q('photo-input').addEventListener('change', function(ev){
+    q('photo-input').addEventListener('change', async function(ev){
       var file = ev.target.files && ev.target.files[0];
       if(!file) return;
-      showToast('Code wird gelesen …');
-      var reader = new Html5Qrcode('file-reader', { verbose: false });
-      reader.scanFile(file, false).then(function(text){
-        loadCodeIntoForm(text);
-      }).catch(function(){
-        showToast('Kein Code erkannt. Näher ran, mehr Licht, oder Code manuell eingeben.');
-      }).then(function(){
-        ev.target.value = '';
-        try{ reader.clear(); }catch(e){}
-      });
+      showToast('Patch wird gelesen … (beim ersten Mal kann es etwas dauern)');
+      var code = null;
+      try{
+        var canvas = await fileToCanvas(file, 1800);
+        code = await ocrCanvas(canvas);
+      }catch(e){ /* weiter mit QR */ }
+      if(!code){
+        var reader = null;
+        try{
+          reader = new Html5Qrcode('file-reader', { verbose: false });
+          code = await reader.scanFile(file, false);
+        }catch(e){ code = null; }
+        try{ if(reader){ reader.clear(); } }catch(e){}
+      }
+      ev.target.value = '';
+      if(code){ handleScanned(code); }
+      else{ showToast('Nichts erkannt. Näher ran, Nummer scharf und gut beleuchtet, oder manuell eingeben.'); }
     });
     el.btnManualGo.addEventListener('click', function(){
       var v = el.manualCode.value.trim();
       if(!v){ showToast('Bitte einen Code eingeben.'); return; }
-      loadCodeIntoForm(v);
+      loadCodeIntoForm(extractCode(v) || v);
     });
     el.manualCode.addEventListener('keydown', function(e){
       if(e.key === 'Enter'){ el.btnManualGo.click(); }
@@ -630,6 +641,13 @@
     el.btnDelete.addEventListener('click', deleteItem);
     el.searchInput.addEventListener('input', renderList);
     el.searchCount = q('search-count');
+    q('btn-inv-scan').addEventListener('click', function(){
+      switchTab('scan');
+      resetScanForm();
+      scanTarget = 'search';
+      updateScanHint();
+      startScanner();
+    });
     el.searchInput.addEventListener('keydown', function(e){
       if(e.key !== 'Enter') return;
       e.preventDefault();
@@ -934,7 +952,7 @@
     el.viewInventory.style.display = (tab === 'inventory') ? 'block' : 'none';
     el.viewLaundry.style.display = (tab === 'laundry') ? 'block' : 'none';
     el.viewMembers.style.display = (tab === 'members') ? 'block' : 'none';
-    if(tab !== 'scan'){ stopScanner(); }
+    if(tab !== 'scan'){ stopScanner(); scanTarget = 'form'; updateScanHint(); }
   }
 
   function subscribeItems(){
@@ -985,11 +1003,12 @@
       function(){ /* ignore per-frame no-match */ }
     ).then(function(){
       scanning = true;
+      startLiveOcr();
       el.scannerWrap.classList.add('scanning');
       el.btnStartScan.style.display = 'none';
       el.btnStopScan.style.display = 'block';
     }).catch(function(){
-      showToast('Live-Kamera hier nicht verfügbar. Nutze "Foto vom Code aufnehmen".');
+      showToast('Live-Kamera hier nicht verfügbar. Nutze "Foto vom Patch aufnehmen".');
       q('reader').style.display = 'none';
     });
   }
@@ -1006,6 +1025,7 @@
 
   function finishStopUi(){
     scanning = false;
+    stopLiveOcr();
     el.scannerWrap.classList.remove('scanning');
     q('reader').style.display = 'none';
     el.btnStartScan.style.display = 'block';
@@ -1013,11 +1033,95 @@
   }
 
   function onScanSuccess(decodedText){
-    if(!scanning) return;
-    scanning = false; // guard against duplicate fires while stopping
+    if(!scanning || handling) return;
+    handling = true;
+    setTimeout(function(){ handling = false; }, 1000);
     if(navigator.vibrate){ navigator.vibrate(70); }
     stopScanner();
-    loadCodeIntoForm(decodedText);
+    handleScanned(decodedText);
+  }
+
+  var ocrWorker = null;
+  var ocrBusy = false;
+  var ocrTimer = null;
+  var handling = false;
+
+  function extractCode(text){
+    var m = /W\s?((?:\d\s?){6})/i.exec(String(text));
+    if(!m) return null;
+    var digits = m[1].replace(/\s/g, '');
+    return digits.length === 6 ? ('W' + digits) : null;
+  }
+
+  async function getOcrWorker(){
+    if(!ocrWorker){ ocrWorker = await Tesseract.createWorker('eng'); }
+    return ocrWorker;
+  }
+
+  async function ocrCanvas(canvas){
+    var w = await getOcrWorker();
+    var r = await w.recognize(canvas);
+    return extractCode((r && r.data && r.data.text) || '');
+  }
+
+  async function fileToCanvas(file, maxDim){
+    var bmp = await createImageBitmap(file);
+    var sc = Math.min(1, maxDim / Math.max(bmp.width, bmp.height));
+    var c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * sc);
+    c.height = Math.round(bmp.height * sc);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    return c;
+  }
+
+  function startLiveOcr(){
+    stopLiveOcr();
+    ocrTimer = setInterval(async function(){
+      if(!scanning || ocrBusy) return;
+      var v = document.querySelector('#reader video');
+      if(!v || !v.videoWidth) return;
+      ocrBusy = true;
+      try{
+        var sc = Math.min(1, 1280 / v.videoWidth);
+        var c = document.createElement('canvas');
+        c.width = Math.round(v.videoWidth * sc);
+        c.height = Math.round(v.videoHeight * sc);
+        c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+        var code = await ocrCanvas(c);
+        if(code && scanning){ onScanSuccess(code); }
+      }catch(e){ /* nächster Versuch */ }
+      ocrBusy = false;
+    }, 1500);
+  }
+  function stopLiveOcr(){
+    if(ocrTimer){ clearInterval(ocrTimer); ocrTimer = null; }
+  }
+
+  function handleScanned(text){
+    text = extractCode(String(text)) || String(text);
+    if(scanTarget === 'search'){
+      scanTarget = 'form';
+      updateScanHint();
+      var raw = String(text).trim();
+      var id = sanitizeCode(raw);
+      var found = items.find(function(i){ return i.id === id || (i.code || '') === raw; });
+      if(found){
+        openItemForEdit(found);
+        showToast('Eintrag gefunden.');
+      }else{
+        el.searchInput.value = raw;
+        switchTab('inventory');
+        renderList();
+        showToast('Kein Eintrag mit diesem Code gefunden.');
+      }
+      return;
+    }
+    loadCodeIntoForm(text);
+  }
+
+  function updateScanHint(){
+    var h = q('scan-mode-hint');
+    if(h){ h.style.display = (scanTarget === 'search') ? 'block' : 'none'; }
   }
 
   async function loadCodeIntoForm(rawCode){
